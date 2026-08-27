@@ -1,9 +1,40 @@
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css";
+
+@import "nativewind/theme";
+
+/* LitIsh design system — keep in sync with src/constants/theme/*.ts */
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: "AtkinsonHyperlegible-Regular";
+  --font-sans-bold: "AtkinsonHyperlegible-Bold";
+  --font-sans-italic: "AtkinsonHyperlegible-Italic";
+  --font-sans-bold-italic: "AtkinsonHyperlegible-BoldItalic";
+
+  /* Color system */
+  --color-indigo: #5b3bf6; /* Path Indigo — primary brand */
+  --color-blue: #4e8bfe; /* Voice Blue — secondary accent */
+  --color-gold: #f4b943; /* Hope Gold — highlights */
+  --color-green: #21c16b; /* Progress Green — success */
+  --color-ink: #0d132b; /* primary text */
+  --color-secondary: #657084; /* secondary/muted text */
+  --color-border: #e6e7eb; /* card borders, dividers */
+  --color-surface: #f6f7fb; /* screen background */
+
+  /* Type scale — Atkinson Hyperlegible */
+  --text-h1: 2rem; /* 32px — screen title */
+  --text-h1--line-height: 2.5rem;
+  --text-h1--font-weight: 700;
+
+  --text-h2: 1.5rem; /* 24px — section title */
+  --text-h2--line-height: 2rem;
+  --text-h2--font-weight: 700;
+
+  --text-h3: 1.25rem; /* 20px — card title */
+  --text-h3--line-height: 1.75rem;
+  --text-h3--font-weight: 700;
+
+  --text-body: 1.125rem; /* 18px — instructions */
+  --text-body--line-height: 1.625rem;
+  --text-body--font-weight: 400;
 }
