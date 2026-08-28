@@ -1,6 +1,6 @@
-import { Image, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
@@ -8,7 +8,15 @@ import { colors } from "@/constants/theme";
 export default function Onboarding() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }}>
-      <View className="flex-1 px-6 pt-2">
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: 24,
+          paddingTop: 8,
+          paddingBottom: 24,
+        }}
+      >
         <View className="flex-row items-center gap-2">
           <Image
             source={images.mascotLogo}
@@ -45,31 +53,17 @@ export default function Onboarding() {
           />
         </View>
 
-        <View className="mt-4 flex-row items-center gap-3">
-          <View className="h-10 w-10 items-center justify-center rounded-full bg-indigo">
-            <Text className="ml-0.5 text-sm text-white">▶</Text>
-          </View>
-          <View>
-            <Text className="font-sans-bold text-sm text-ink">
-              Hear this screen
-            </Text>
-            <Text className="font-sans text-xs text-secondary">
-              Tap anywhere to listen
-            </Text>
-          </View>
-        </View>
-
         <TouchableOpacity
           className="mt-4 flex-row items-center justify-center rounded-full bg-indigo py-4"
           activeOpacity={0.85}
-          onPress={() => router.back()}
+          onPress={() => router.push("/sign-up")}
         >
           <Text className="font-sans-bold text-base text-white">
             Start learning
           </Text>
           <Text className="ml-2 text-base text-white">→</Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
