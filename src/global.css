@@ -5,7 +5,7 @@
 @import "nativewind/theme";
 
 /* LitIsh design system — keep in sync with src/constants/theme/*.ts */
-:root {
+@theme {
   --font-sans: "AtkinsonHyperlegible-Regular";
   --font-sans-bold: "AtkinsonHyperlegible-Bold";
   --font-sans-italic: "AtkinsonHyperlegible-Italic";
