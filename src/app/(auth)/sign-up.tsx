@@ -1,4 +1,5 @@
-import { router } from "expo-router";
+import { useSignUp } from "@clerk/expo";
+import { router, type Href } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,20 +9,63 @@ import { VerificationModal } from "@/components/VerificationModal";
 import { colors } from "@/constants/theme";
 
 export default function SignUp() {
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [pendingCredentials, setPendingCredentials] = useState({
-    email: "",
-    password: "",
-  });
+  const { signUp } = useSignUp();
 
-  function handleSubmit(values: { email: string; password: string }) {
-    setPendingCredentials(values);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  async function handleSubmit(values: { email: string; password: string }) {
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    const { error } = await signUp.password({
+      emailAddress: values.email,
+      password: values.password,
+    });
+
+    if (error) {
+      setIsSubmitting(false);
+      setErrorMessage(error.longMessage ?? error.message);
+      return;
+    }
+
+    const { error: sendError } = await signUp.verifications.sendEmailCode();
+
+    setIsSubmitting(false);
+
+    if (sendError) {
+      setErrorMessage(sendError.longMessage ?? sendError.message);
+      return;
+    }
+
+    setEmail(values.email);
     setIsVerifying(true);
   }
 
-  function handleVerified(credentials: { email: string; password: string }) {
-    setPendingCredentials(credentials);
-    router.replace("/");
+  async function handleVerify(code: string) {
+    const { error } = await signUp.verifications.verifyEmailCode({ code });
+
+    if (error) {
+      return error.longMessage ?? error.message;
+    }
+
+    if (signUp.status !== "complete") {
+      return "We couldn't finish creating your account. Please try again.";
+    }
+
+    await signUp.finalize({
+      navigate: ({ session, decorateUrl }) => {
+        if (session.currentTask) {
+          return;
+        }
+        const url = decorateUrl("/");
+        router.replace(url as Href);
+      },
+    });
+
+    return null;
   }
 
   return (
@@ -43,10 +87,13 @@ export default function SignUp() {
             title="Create your account"
             subtitle="Save your lessons and continue on any device."
             showPassword
+            showCaptcha
             primaryButtonLabel="Create account"
             footerPrompt="Already have an account?"
             footerLinkLabel="Log in"
             footerLinkHref="/sign-in"
+            errorMessage={errorMessage}
+            isSubmitting={isSubmitting}
             onSubmit={handleSubmit}
           />
         </ScrollView>
@@ -54,10 +101,9 @@ export default function SignUp() {
 
       <VerificationModal
         visible={isVerifying}
-        email={pendingCredentials.email}
-        password={pendingCredentials.password}
+        email={email}
         onClose={() => setIsVerifying(false)}
-        onVerified={handleVerified}
+        onVerify={handleVerify}
       />
     </SafeAreaView>
   );

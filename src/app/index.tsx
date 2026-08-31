@@ -1,7 +1,18 @@
-import { router } from "expo-router";
+import { useAuth } from "@clerk/expo";
+import { Redirect, router } from "expo-router";
 import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Index() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
     <View className="flex-1 items-center justify-center bg-surface px-6">
       <Text className="font-sans-bold text-h1 text-ink">Welcome to LitIsh</Text>

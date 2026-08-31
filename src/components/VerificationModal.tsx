@@ -1,29 +1,35 @@
-import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 const CODE_LENGTH = 6;
-const NAVIGATE_DELAY_MS = 400;
 const FOCUS_DELAY_MS = 400;
 
 type VerificationModalProps = {
   visible: boolean;
   email: string;
-  password?: string;
   onClose: () => void;
-  onVerified?: (credentials: { email: string; password: string }) => void;
+  onVerify: (code: string) => Promise<string | null>;
 };
 
 export function VerificationModal({
   visible,
   email,
-  password = "",
   onClose,
-  onVerified,
+  onVerify,
 }: VerificationModalProps) {
   const [code, setCode] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!visible) {
@@ -34,43 +40,28 @@ export function VerificationModal({
     return () => clearTimeout(focusTimeout);
   }, [visible]);
 
-  useEffect(() => {
-    return () => {
-      if (completionTimeoutRef.current) {
-        clearTimeout(completionTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  function clearCompletionTimeout() {
-    if (completionTimeoutRef.current) {
-      clearTimeout(completionTimeoutRef.current);
-      completionTimeoutRef.current = null;
-    }
-  }
-
   function handleClose() {
-    clearCompletionTimeout();
     setCode("");
+    setError(null);
+    setIsVerifying(false);
     onClose();
   }
 
-  function handleChangeCode(value: string) {
-    clearCompletionTimeout();
+  async function handleChangeCode(value: string) {
+    setError(null);
     const digitsOnly = value.replace(/[^0-9]/g, "").slice(0, CODE_LENGTH);
     setCode(digitsOnly);
 
     if (digitsOnly.length === CODE_LENGTH) {
-      completionTimeoutRef.current = setTimeout(() => {
-        completionTimeoutRef.current = null;
-        handleClose();
-        if (onVerified) {
-          onVerified({ email, password });
-          return;
-        }
+      setIsVerifying(true);
+      const verifyError = await onVerify(digitsOnly);
+      setIsVerifying(false);
 
-        router.replace("/");
-      }, NAVIGATE_DELAY_MS);
+      if (verifyError) {
+        setError(verifyError);
+        setCode("");
+        inputRef.current?.focus();
+      }
     }
   }
 
@@ -104,7 +95,11 @@ export function VerificationModal({
                 <View
                   key={index}
                   className={`h-14 w-11 items-center justify-center rounded-2xl border bg-surface ${
-                    index === code.length ? "border-indigo" : "border-border"
+                    error
+                      ? "border-red-400"
+                      : index === code.length
+                        ? "border-indigo"
+                        : "border-border"
                   }`}
                 >
                   <Text className="font-sans-bold text-xl text-ink">{code[index] ?? ""}</Text>
@@ -118,12 +113,22 @@ export function VerificationModal({
               onChangeText={handleChangeCode}
               keyboardType="number-pad"
               maxLength={CODE_LENGTH}
+              editable={!isVerifying}
               className="absolute h-px w-px opacity-0"
             />
 
-            <Text className="mt-6 text-center font-sans text-xs text-secondary">
-              Take your time. Your code is valid for a few minutes.
-            </Text>
+            {isVerifying ? (
+              <View className="mt-6 flex-row items-center justify-center gap-2">
+                <ActivityIndicator size="small" color="#6366F1" />
+                <Text className="font-sans text-xs text-secondary">Verifying…</Text>
+              </View>
+            ) : error ? (
+              <Text className="mt-6 text-center font-sans text-xs text-red-500">{error}</Text>
+            ) : (
+              <Text className="mt-6 text-center font-sans text-xs text-secondary">
+                Take your time. Your code is valid for a few minutes.
+              </Text>
+            )}
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

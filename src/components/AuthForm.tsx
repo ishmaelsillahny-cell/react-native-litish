@@ -1,9 +1,30 @@
+import { useSSO } from "@clerk/expo/experimental";
 import { Link, router, type Href } from "expo-router";
 import { useState } from "react";
-import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import { images } from "@/constants/images";
 import { colors } from "@/constants/theme";
+
+type SocialStrategy = "oauth_google" | "oauth_facebook" | "oauth_apple";
+
+const SOCIAL_PROVIDERS: {
+  strategy: SocialStrategy;
+  label: string;
+  icon: string;
+  iconColor: string;
+}[] = [
+  { strategy: "oauth_google", label: "Continue with Google", icon: "G", iconColor: "#4285F4" },
+  { strategy: "oauth_facebook", label: "Continue with Facebook", icon: "f", iconColor: "#1877F2" },
+  { strategy: "oauth_apple", label: "Continue with Apple", icon: "", iconColor: "#000000" },
+];
 
 type AuthFormProps = {
   title: string;
@@ -13,6 +34,9 @@ type AuthFormProps = {
   footerPrompt: string;
   footerLinkLabel: string;
   footerLinkHref: Href;
+  errorMessage?: string | null;
+  isSubmitting?: boolean;
+  showCaptcha?: boolean;
   onSubmit: (values: { email: string; password: string }) => void;
 };
 
@@ -24,11 +48,36 @@ export function AuthForm({
   footerPrompt,
   footerLinkLabel,
   footerLinkHref,
+  errorMessage,
+  isSubmitting = false,
+  showCaptcha = false,
   onSubmit,
 }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const { startSSOFlow } = useSSO();
+  const [socialError, setSocialError] = useState<string | null>(null);
+  const [pendingStrategy, setPendingStrategy] = useState<SocialStrategy | null>(null);
+
+  async function handleSocialPress(strategy: SocialStrategy) {
+    setSocialError(null);
+    setPendingStrategy(strategy);
+
+    try {
+      const { createdSessionId } = await startSSOFlow({ strategy });
+      if (createdSessionId) {
+        router.replace("/");
+      }
+    } catch {
+      setSocialError("That sign-in didn't work. Please try again.");
+    } finally {
+      setPendingStrategy(null);
+    }
+  }
+
+  const displayedError = errorMessage ?? socialError;
 
   return (
     <View>
@@ -68,6 +117,7 @@ export function AuthForm({
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}
+            editable={!isSubmitting}
             className="py-0.5 font-sans text-base text-ink"
           />
         </View>
@@ -84,6 +134,7 @@ export function AuthForm({
                 placeholder="Create a password"
                 placeholderTextColor={colors.secondary}
                 secureTextEntry={!isPasswordVisible}
+                editable={!isSubmitting}
                 className="flex-1 py-0.5 font-sans text-base text-ink"
               />
               <TouchableOpacity onPress={() => setIsPasswordVisible((v) => !v)} hitSlop={8}>
@@ -96,13 +147,58 @@ export function AuthForm({
         )}
       </View>
 
+      {displayedError && (
+        <Text className="mt-3 text-center font-sans text-xs text-red-500">
+          {displayedError}
+        </Text>
+      )}
+
       <TouchableOpacity
-        className="mt-5 items-center justify-center rounded-full bg-indigo py-4"
+        className="mt-5 flex-row items-center justify-center rounded-full bg-indigo py-4"
         activeOpacity={0.85}
+        disabled={isSubmitting}
         onPress={() => onSubmit({ email, password })}
       >
-        <Text className="font-sans-bold text-base text-white">{primaryButtonLabel}</Text>
+        {isSubmitting ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text className="font-sans-bold text-base text-white">{primaryButtonLabel}</Text>
+        )}
       </TouchableOpacity>
+
+      {showCaptcha && <View nativeID="clerk-captcha" />}
+
+      <View className="mt-5 flex-row items-center gap-3">
+        <View className="h-px flex-1 bg-border" />
+        <Text className="font-sans text-xs text-secondary">or continue with</Text>
+        <View className="h-px flex-1 bg-border" />
+      </View>
+
+      <View className="mt-4 gap-3">
+        {SOCIAL_PROVIDERS.map((provider) => (
+          <TouchableOpacity
+            key={provider.strategy}
+            className="flex-row items-center justify-center gap-2 rounded-full border border-border bg-white py-4"
+            activeOpacity={0.85}
+            disabled={pendingStrategy !== null}
+            onPress={() => handleSocialPress(provider.strategy)}
+          >
+            {pendingStrategy === provider.strategy ? (
+              <ActivityIndicator size="small" color={colors.secondary} />
+            ) : (
+              <>
+                <Text
+                  className="font-sans-bold text-base"
+                  style={{ color: provider.iconColor }}
+                >
+                  {provider.icon}
+                </Text>
+                <Text className="font-sans-bold text-base text-ink">{provider.label}</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <Text className="mt-5 text-center font-sans text-sm text-secondary">
         {footerPrompt}{" "}
