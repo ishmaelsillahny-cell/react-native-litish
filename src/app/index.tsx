@@ -1,12 +1,44 @@
-import { Text, View } from "react-native";
+import { useAuth } from "@clerk/expo";
+import { Redirect, router } from "expo-router";
+import { Text, TouchableOpacity, View } from "react-native";
 
 export default function Index() {
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!isSignedIn) {
+    return <Redirect href="/onboarding" />;
+  }
+
   return (
-    <View className="flex-1 items-center justify-center bg-surface">
+    <View className="flex-1 items-center justify-center bg-surface px-6">
       <Text className="font-sans-bold text-h1 text-ink">Welcome to LitIsh</Text>
-      <Text className="mt-2 font-sans text-body text-secondary">
+      <Text className="mt-2 text-center font-sans text-body text-secondary">
         Read and write everyday English
       </Text>
+
+      <TouchableOpacity
+        className="mt-8 rounded-full bg-indigo px-6 py-4"
+        activeOpacity={0.85}
+        onPress={() => router.push("/onboarding")}
+      >
+        <Text className="font-sans-bold text-base text-white">
+          View onboarding
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        className="mt-4 rounded-full border border-border bg-white px-6 py-4"
+        activeOpacity={0.85}
+        onPress={() => router.push("/spoken-instructions")}
+      >
+        <Text className="font-sans-bold text-base text-ink">
+          Set up spoken instructions
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }
