@@ -29,6 +29,16 @@ export default function Index() {
           View onboarding
         </Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        className="mt-4 rounded-full border border-border bg-white px-6 py-4"
+        activeOpacity={0.85}
+        onPress={() => router.push("/spoken-instructions")}
+      >
+        <Text className="font-sans-bold text-base text-ink">
+          Set up spoken instructions
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 }

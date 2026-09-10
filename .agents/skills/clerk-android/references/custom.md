@@ -31,8 +31,10 @@ Source priority rules for custom flow:
 
 3. Initialization and state contract
 - Initialize via `Clerk.initialize(...)` at app startup.
-- Wait for `Clerk.isInitialized` before treating Clerk as ready.
-- Drive session/user UI from `Clerk.userFlow`/`Clerk.sessionFlow`.
+- Wait for the SDK’s completion contract before treating Clerk as ready: prefer `Clerk.isAuthFlowCompleteFlow` when available, or the equivalent active-session/trusted-device completion signal.
+- Do not gate protected UI solely on `Clerk.isInitialized`, `Clerk.userFlow`, or `Clerk.sessionFlow` when a pending auth or trusted-device flow still exists.
+- After sign-in or sign-up succeeds, call `Clerk.auth.setActive` with the created session ID before showing authenticated UI, and resolve any pending `Clerk.sessionFlow` work before granting application access.
+- Check the returned result/error before rendering authenticated content, and keep the `createdSessionId`/session activation step as part of the success path.
 
 4. Capability-driven flow logic
 - Use Clerk runtime capability/settings fields to drive flow branches (first factors, social providers, MFA, Google One Tap support).

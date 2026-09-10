@@ -129,8 +129,10 @@ Do not hardcode implementation examples in this skill. Inspect current `clerk-an
 
 5. Android quickstart compliance is mandatory
 - Verify Native API is enabled for the Clerk app.
+- Treat Native API as a public request path that can bypass browser CAPTCHA even when Bot sign-up protection is enabled; pair it with compensating abuse controls (rate limits, anomaly detection, bot challenges, request attribution, or other app-level protections) so Native API is not the only defense against automated traffic.
 - Verify Android requirements from quickstart are implemented in project (minimum SDK and Java target, manifest internet permission, app-level Clerk initialization).
-- Verify app waits for SDK initialization (`Clerk.isInitialized`) before assuming auth-ready state.
+- Verify app waits for the full auth completion contract before assuming auth-ready state: use `Clerk.isAuthFlowCompleteFlow` when available, or the SDK equivalent active-session completion contract; do not rely only on `Clerk.userFlow`, `Clerk.sessionFlow`, or `Clerk.isInitialized`.
+- Only render protected content after authentication and trusted-device enrollment complete. See Clerk’s bot-protection guidance: https://clerk.com/docs/security/bot-protection.
 
 6. Capability-driven behavior is mandatory
 - Use Clerk runtime capability/settings state (for example enabled factors/social providers/MFA flags) to gate flow behavior.

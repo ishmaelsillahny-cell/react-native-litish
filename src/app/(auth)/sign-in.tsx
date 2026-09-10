@@ -1,5 +1,5 @@
 import { useSignIn } from "@clerk/expo";
-import { router, type Href } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -44,15 +44,13 @@ export default function SignIn() {
       return "We couldn't finish signing you in. Please try again.";
     }
 
-    await signIn.finalize({
-      navigate: ({ session, decorateUrl }) => {
-        if (session.currentTask) {
-          return;
-        }
-        const url = decorateUrl("/");
-        router.replace(url as Href);
-      },
-    });
+    const { error: finalizeError } = await signIn.finalize();
+
+    if (finalizeError) {
+      return finalizeError.longMessage ?? finalizeError.message;
+    }
+
+    router.replace("/");
 
     return null;
   }

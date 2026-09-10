@@ -1,5 +1,5 @@
 import { useSignUp } from "@clerk/expo";
-import { router, type Href } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -55,15 +55,13 @@ export default function SignUp() {
       return "We couldn't finish creating your account. Please try again.";
     }
 
-    await signUp.finalize({
-      navigate: ({ session, decorateUrl }) => {
-        if (session.currentTask) {
-          return;
-        }
-        const url = decorateUrl("/");
-        router.replace(url as Href);
-      },
-    });
+    const { error: finalizeError } = await signUp.finalize();
+
+    if (finalizeError) {
+      return finalizeError.longMessage ?? finalizeError.message;
+    }
+
+    router.replace("/");
 
     return null;
   }
